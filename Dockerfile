@@ -15,6 +15,7 @@ RUN apt-get update && \
     unzip \
     git \
     jq \
+    fzf \
     gnupg \
     build-essential \
     gcc \
@@ -54,17 +55,37 @@ RUN ansible --version
 ARG KUBECTL_VERSION=v1.37.0
 
 RUN curl -LO \
-    "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl" && \
-    install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl && \
-    rm -f kubectl
+"https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl" && \
+install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl && \
+rm -f kubectl
 
 RUN kubectl version --client -o yaml
+
+# Krew (plugin manager for kubectl)
+RUN set -x; cd "$(mktemp -d)" && \
+    OS="$(uname | tr '[:upper:]' '[:lower:]')" && \
+    KREW="krew-${OS}_${TARGETARCH}" && \
+    curl -fsSLO \
+    "https://github.com/kubernetes-sigs/krew/releases/latest/download/${KREW}.tar.gz" && \
+    tar zxvf "${KREW}.tar.gz" && \
+    ./"${KREW}" install krew
+
+RUN kubectl krew update
+
+RUN kubectl krew version
 
 # Helm
 RUN curl -fsSL -o get_helm.sh \
     https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-4 && \
     chmod 700 get_helm.sh && \
     ./get_helm.sh
+
+RUN helm version --client
+
+# KubeNS
+RUN curl -sS https://webi.sh/kubens | sh
+
+RUN kubens --version
 
 # ArgoCD
 ARG ARGOCD_VERSION=v3.5.2
@@ -95,19 +116,6 @@ RUN curl -L --fail --remote-name-all \
     rm hubble-linux-${TARGETARCH}.tar.gz
     
 RUN hubble version --client
-
-# Krew (plugin manager for kubectl)
-RUN set -x; cd "$(mktemp -d)" && \
-    OS="$(uname | tr '[:upper:]' '[:lower:]')" && \
-    KREW="krew-${OS}_${TARGETARCH}" && \
-    curl -fsSLO \
-    "https://github.com/kubernetes-sigs/krew/releases/latest/download/${KREW}.tar.gz" && \
-    tar zxvf "${KREW}.tar.gz" && \
-    ./"${KREW}" install krew
-
-RUN kubectl krew update
-
-RUN kubectl krew version
 
 # CNPG plugin
 RUN kubectl krew install cnpg
