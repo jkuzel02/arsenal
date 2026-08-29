@@ -115,9 +115,9 @@ RUN curl -L --fail --remote-name-all \
     tar xzvfC hubble-linux-${TARGETARCH}.tar.gz /usr/local/bin && \
     rm hubble-linux-${TARGETARCH}.tar.gz
     
-RUN hubble version --client
+RUN hubble version
 
-# CNPG plugin
+# Kubectl Krew CNPG plugin
 RUN kubectl krew install cnpg
 
 RUN kubectl cnpg version
