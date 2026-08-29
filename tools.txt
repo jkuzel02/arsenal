@@ -1,0 +1,11 @@
+# Python tooling
+
+ansible
+pytest
+
+# add more later, e.g.
+# molecule
+# yamllint
+# ruff
+# black
+# mypy
