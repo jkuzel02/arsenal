@@ -9,11 +9,13 @@ ENV PATH="/root/.local/bin:/usr/local/go/bin:${PATH}"
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     bash ca-certificates curl wget unzip git jq \
-    gnupg build-essential gcc python3 && \
+    gnupg build-essential gcc python3 pipx && \
     rm -rf /var/lib/apt/lists/*
 
-# Validate presence of GCC
+# Validation of GCC, Python3 interpreter and pipx presence
 RUN gcc --version
+RUN python3 --version
+RUN pipx --version
 
 # uv
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh
@@ -28,14 +30,12 @@ RUN curl --proto '=https' --tlsv1.2 -fsSL \
     ./install-opentofu.sh --install-method standalone && \
     rm -f install-opentofu.sh
 
-RUN tofu version
+    RUN tofu version
 
 # Ansible
-ARG ANSIBLE_CORE_VERSION=2.21.1
+ARG ANSIBLE_CORE_VERSION=2.12.3
 
-RUN python3 -m pip install --user ansible-core==${ANSIBLE_CORE_VERSION}
-RUN python3 -m pip install --user argcomplete
-RUN activate-global-python-argcomplete --user
+RUN pipx install ansible-core==${ANSIBLE_CORE_VERSION}
 
 RUN ansible --version
 
