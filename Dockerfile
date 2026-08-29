@@ -31,10 +31,12 @@ RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 # Python
 COPY tools.txt /tmp/tools.txt
 
-RUN while read -r pkg; do \
-      [ -n "$pkg" ] && \
-      [ "${pkg#\#}" = "$pkg" ] && \
-      uv tool install "$pkg"; \
+RUN set -eux; \
+    while read -r pkg; do \
+      if [ -n "$pkg" ] && [ "${pkg#\#}" = "$pkg" ]; then \
+        echo "Installing: $pkg"; \
+        uv tool install "$pkg"; \
+      fi; \
     done < /tmp/tools.txt
 
 # Go
