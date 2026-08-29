@@ -29,23 +29,9 @@ RUN apt-get update && \
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # Python
-COPY tools.txt /tmp/tools.txt
-
-RUN set -eux; \
-    while read -r pkg; do \
-      if [ -n "$pkg" ] && [ "${pkg#\#}" = "$pkg" ]; then \
-        echo "Installing: $pkg"; \
-        uv tool install "$pkg"; \
-      fi; \
-    done < /tmp/tools.txt
-
-# Go
-RUN curl -fsSL \
-    "https://go.dev/dl/go${GOLANG_VERSION}.linux-${TARGETARCH}.tar.gz" \
-    -o /tmp/go.tar.gz && \
-    rm -rf /usr/local/go && \
-    tar -C /usr/local -xzf /tmp/go.tar.gz && \
-    rm -f /tmp/go.tar.gz
+RUN for tool in ansible pytest; do \
+        uv tool install "$tool"; \
+    done
 
 # Terraform
 RUN curl -fsSL \
@@ -90,7 +76,6 @@ RUN terraform version
 RUN kubectl version --client
 RUN aws --version
 RUN gcloud version
-RUN go version
 RUN gcc --version
 
 CMD ["/bin/bash"]
