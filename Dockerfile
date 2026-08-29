@@ -22,7 +22,8 @@ RUN apt-get update && \
     pipx && \
     rm -rf /var/lib/apt/lists/*
 
-# Validation of GCC, Python3 interpreter and pipx presence
+# Validation of Git, GCC, Python3 interpreter and pipx presence
+RUN git --version
 RUN gcc --version
 RUN python3 --version
 RUN pipx --version
@@ -59,6 +60,12 @@ RUN curl -LO \
 
 RUN kubectl version --client -o yaml
 
+# Helm
+RUN curl -fsSL -o get_helm.sh \
+    https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-4 && \
+    chmod 700 get_helm.sh && \
+    ./get_helm.sh
+
 # ArgoCD
 ARG ARGOCD_VERSION=v3.5.2
 
@@ -67,7 +74,7 @@ RUN curl -sSL -o argocd-linux-${TARGETARCH} \
     install -m 555 argocd-linux-${TARGETARCH} /usr/local/bin/argocd && \
     rm argocd-linux-${TARGETARCH}
 
-RUN argocd version
+RUN argocd version --client -o yaml
 
 # Cilium
 ARG CILIUM_CLI_VERSION=v0.19.7
@@ -77,7 +84,7 @@ RUN curl -L --fail --remote-name-all \
     tar xzvfC cilium-linux-${TARGETARCH}.tar.gz /usr/local/bin && \
     rm cilium-linux-${TARGETARCH}.tar.gz
 
-RUN cilium version
+RUN cilium version --client
 
 # Hubble
 ARG HUBBLE_VERSION=v1.19.4
@@ -87,6 +94,24 @@ RUN curl -L --fail --remote-name-all \
     tar xzvfC hubble-linux-${TARGETARCH}.tar.gz /usr/local/bin && \
     rm hubble-linux-${TARGETARCH}.tar.gz
     
-RUN hubble version
+RUN hubble version --client
+
+# Krew (plugin manager for kubectl)
+RUN set -x; cd "$(mktemp -d)" && \
+    OS="$(uname | tr '[:upper:]' '[:lower:]')" && \
+    KREW="krew-${OS}_${TARGETARCH}" && \
+    curl -fsSLO \
+    "https://github.com/kubernetes-sigs/krew/releases/latest/download/${KREW}.tar.gz" && \
+    tar zxvf "${KREW}.tar.gz" && \
+    ./"${KREW}" install krew
+
+RUN kubectl krew update
+
+RUN kubectl krew version
+
+# CNPG plugin
+RUN kubectl krew install cnpg
+
+RUN kubectl cnpg version
 
 CMD ["/bin/bash"]
