@@ -53,8 +53,9 @@ RUN ansible --version
 ARG KUBECTL_VERSION=v1.37.0
 
 RUN curl -LO \
-    "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl" \
-    sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+    "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl" && \
+    install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl && \
+    rm -f kubectl
 
 RUN kubectl version --client -o yaml
 
@@ -62,8 +63,8 @@ RUN kubectl version --client -o yaml
 ARG ARGOCD_VERSION=v3.5.2
 
 RUN curl -sSL -o argocd-linux-${TARGETARCH} \
-    "https://github.com/argoproj/argo-cd/releases/download/${ARGOCD_VERSION}/argocd-linux-${TARGETARCH}" \
-    sudo install -m 555 argocd-linux-${TARGETARCH} /usr/local/bin/argocd \
+    "https://github.com/argoproj/argo-cd/releases/download/${ARGOCD_VERSION}/argocd-linux-${TARGETARCH}" && \
+    install -m 555 argocd-linux-${TARGETARCH} /usr/local/bin/argocd && \
     rm argocd-linux-${TARGETARCH}
 
 RUN argocd version
@@ -72,8 +73,8 @@ RUN argocd version
 ARG CILIUM_CLI_VERSION=v0.19.7
 
 RUN curl -L --fail --remote-name-all \
-    "https://github.com/cilium/cilium-cli/releases/download/${CILIUM_CLI_VERSION}/cilium-linux-${TARGETARCH}.tar.gz" \
-    sudo tar xzvfC cilium-linux-${TARGETARCH}.tar.gz /usr/local/bin \
+    "https://github.com/cilium/cilium-cli/releases/download/${CILIUM_CLI_VERSION}/cilium-linux-${TARGETARCH}.tar.gz" && \
+    tar xzvfC cilium-linux-${TARGETARCH}.tar.gz /usr/local/bin && \
     rm cilium-linux-${TARGETARCH}.tar.gz
 
 RUN cilium version
@@ -82,8 +83,8 @@ RUN cilium version
 ARG HUBBLE_VERSION=v1.19.4
 
 RUN curl -L --fail --remote-name-all \
-    "https://github.com/cilium/hubble/releases/download/${HUBBLE_VERSION}/hubble-linux-${TARGETARCH}.tar.gz" \
-    sudo tar xzvfC hubble-linux-${TARGETARCH}.tar.gz /usr/local/bin \
+    "https://github.com/cilium/hubble/releases/download/${HUBBLE_VERSION}/hubble-linux-${TARGETARCH}.tar.gz" && \
+    tar xzvfC hubble-linux-${TARGETARCH}.tar.gz /usr/local/bin && \
     rm hubble-linux-${TARGETARCH}.tar.gz
     
 RUN hubble version
