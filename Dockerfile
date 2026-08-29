@@ -83,14 +83,14 @@ RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.
     rm -rf /var/lib/apt/lists/*
 
 # Validation
-RUN uv --version && \
-    ansible --version && \
-    pytest --version && \
-    terraform version && \
-    kubectl version --client && \
-    aws --version && \
-    gcloud version && \
-    go version && \
-    gcc --version
+RUN uv --version
+RUN ansible --version
+RUN pytest --version
+RUN terraform version
+RUN kubectl version --client
+RUN aws --version
+RUN gcloud version
+RUN go version
+RUN gcc --version
 
 CMD ["/bin/bash"]
