@@ -78,7 +78,7 @@ RUN curl -fsSL -o get_helm.sh \
     chmod 700 get_helm.sh && \
     ./get_helm.sh
 
-RUN helm version --client
+RUN helm version
 
 # KubeNS
 RUN curl -sS https://webi.sh/kubens | sh
