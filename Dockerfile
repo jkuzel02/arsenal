@@ -70,8 +70,6 @@ RUN set -x; cd "$(mktemp -d)" && \
     tar zxvf "${KREW}.tar.gz" && \
     ./"${KREW}" install krew
 
-RUN kubectl krew update
-
 RUN kubectl krew version
 
 # Helm
@@ -118,6 +116,7 @@ RUN curl -L --fail --remote-name-all \
 RUN hubble version
 
 # Kubectl Krew CNPG plugin
+RUN kubectl krew update
 RUN kubectl krew install cnpg
 
 RUN kubectl cnpg version
