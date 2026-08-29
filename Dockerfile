@@ -3,7 +3,7 @@ FROM ubuntu:24.04
 ARG TARGETARCH
 
 ENV DEBIAN_FRONTEND=noninteractive
-ENV PATH="/root/.local/bin:${PATH}"
+ENV PATH="/root/.local/bin:/root/.krew/bin:${PATH}"
 
 # Base packages
 RUN apt-get update && \
