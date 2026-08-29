@@ -2,80 +2,77 @@ FROM ubuntu:24.04
 
 ARG TARGETARCH
 
-ARG GOLANG_VERSION=1.25.1
-ARG TERRAFORM_VERSION=1.13.2
-ARG KUBECTL_VERSION=v1.35.0
-
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PATH="/root/.local/bin:/usr/local/go/bin:${PATH}"
 
 # Base packages
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-      bash \
-      ca-certificates \
-      curl \
-      wget \
-      unzip \
-      git \
-      jq \
-      gnupg \
-      build-essential \
-      gcc \
-      python3 && \
+    bash ca-certificates curl wget unzip git jq \
+    gnupg build-essential gcc python3 && \
     rm -rf /var/lib/apt/lists/*
+
+# Validate presence of GCC
+RUN gcc --version
 
 # uv
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 
-# Python
-RUN for tool in ansible pytest; do \
-        uv tool install "$tool"; \
-    done
+RUN uv --version
 
-# Terraform
-RUN curl -fsSL \
-    "https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_${TARGETARCH}.zip" \
-    -o /tmp/terraform.zip && \
-    unzip /tmp/terraform.zip -d /usr/local/bin && \
-    rm -f /tmp/terraform.zip
+# OpenTofu
+RUN curl --proto '=https' --tlsv1.2 -fsSL \
+    https://get.opentofu.org/install-opentofu.sh \
+    -o install-opentofu.sh \
+    chmod +x install-opentofu.sh \
+    ./install-opentofu.sh --install-method standalone \
+    rm -f install-opentofu.sh
+
+RUN tofu version
+
+# Ansible
+ARG ANSIBLE_CORE_VERSION=2.21.1
+
+RUN python3 -m pip install --user ansible-core==${ANSIBLE_CORE_VERSION}
+RUN python3 -m pip install --user argcomplete
+RUN activate-global-python-argcomplete --user
+
+RUN ansible --version
 
 # kubectl
-RUN curl -fsSL \
-    "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/${TARGETARCH}/kubectl" \
-    -o /usr/local/bin/kubectl && \
-    chmod +x /usr/local/bin/kubectl
+ARG KUBECTL_VERSION=v1.37.0
 
-# AWS CLI
-RUN case "${TARGETARCH}" in \
-      amd64) AWS_ARCH=x86_64 ;; \
-      arm64) AWS_ARCH=aarch64 ;; \
-      *) echo "Unsupported architecture: ${TARGETARCH}" && exit 1 ;; \
-    esac && \
-    curl -fsSL \
-      "https://awscli.amazonaws.com/awscli-exe-linux-${AWS_ARCH}.zip" \
-      -o /tmp/awscliv2.zip && \
-    unzip -q /tmp/awscliv2.zip -d /tmp && \
-    /tmp/aws/install && \
-    rm -rf /tmp/aws /tmp/awscliv2.zip
+RUN curl -LO "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl" \
+    sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
 
-# Google Cloud CLI
-RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" \
-      > /etc/apt/sources.list.d/google-cloud-sdk.list && \
-    curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg \
-      | gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg && \
-    apt-get update && \
-    apt-get install -y --no-install-recommends google-cloud-cli && \
-    rm -rf /var/lib/apt/lists/*
+RUN kubectl version --client -o yaml
 
-# Validation
-RUN uv --version
-RUN ansible --version
-RUN pytest --version
-RUN terraform version
-RUN kubectl version --client
-RUN aws --version
-RUN gcloud version
-RUN gcc --version
+# ArgoCD
+ARG ARGOCD_VERSION=v3.5.2
+
+RUN curl -sSL -o argocd-linux-${TARGETARCH} \
+    https://github.com/argoproj/argo-cd/releases/download/${ARGOCD_VERSION}/argocd-linux-${TARGETARCH} \
+    sudo install -m 555 argocd-linux-${TARGETARCH} /usr/local/bin/argocd \
+    rm argocd-linux-${TARGETARCH}
+
+RUN argocd version
+
+# Cilium
+ARG CILIUM_CLI_VERSION=v0.19.7
+
+RUN curl -L --fail --remote-name-all https://github.com/cilium/cilium-cli/releases/download/${CILIUM_CLI_VERSION}/cilium-linux-${TARGETARCH}.tar.gz \
+    sudo tar xzvfC cilium-linux-${TARGETARCH}.tar.gz /usr/local/bin \
+    rm cilium-linux-${TARGETARCH}.tar.gz
+
+RUN cilium version
+
+# Hubble
+ARG HUBBLE_VERSION=v1.19.4
+
+RUN curl -L --fail --remote-name-all https://github.com/cilium/hubble/releases/download/${HUBBLE_VERSION}/hubble-linux-${TARGETARCH}.tar.gz \
+    sudo tar xzvfC hubble-linux-${TARGETARCH}.tar.gz /usr/local/bin \
+    rm hubble-linux-${TARGETARCH}.tar.gz
+    
+RUN hubble version
 
 CMD ["/bin/bash"]
