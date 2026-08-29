@@ -3,13 +3,23 @@ FROM ubuntu:24.04
 ARG TARGETARCH
 
 ENV DEBIAN_FRONTEND=noninteractive
-ENV PATH="/root/.local/bin:/usr/local/go/bin:${PATH}"
+ENV PATH="/root/.local/bin:${PATH}"
 
 # Base packages
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-    bash ca-certificates curl wget unzip git jq \
-    gnupg build-essential gcc python3 pipx && \
+    bash \
+    ca-certificates \
+    curl \
+    wget \
+    unzip \
+    git \
+    jq \
+    gnupg \
+    build-essential \
+    gcc \
+    python3 \
+    pipx && \
     rm -rf /var/lib/apt/lists/*
 
 # Validation of GCC, Python3 interpreter and pipx presence
@@ -33,7 +43,7 @@ RUN curl --proto '=https' --tlsv1.2 -fsSL \
     RUN tofu version
 
 # Ansible
-ARG ANSIBLE_CORE_VERSION=2.12.3
+ARG ANSIBLE_CORE_VERSION=2.16.0
 
 RUN pipx install ansible-core==${ANSIBLE_CORE_VERSION}
 
